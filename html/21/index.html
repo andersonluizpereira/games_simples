@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo do 21</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #result {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jogo do 21</h1>
+
+    <button onclick="startGame()">Iniciar Jogo</button>
+    <button onclick="hit()">Comprar Carta</button>
+    <button onclick="stand()">Parar</button>
+
+    <p id="player-hand">Sua mão: </p>
+    <p id="dealer-hand">Mão do computador: </p>
+    <p id="result"></p>
+
+    <script>
+        // Variáveis do jogo
+        let deck = [];
+        let playerHand = [];
+        let dealerHand = [];
+        let gameOver = false;
+
+        // Função para iniciar o jogo
+        function startGame() {
+            deck = createDeck();
+            playerHand = [dealCard(), dealCard()];
+            dealerHand = [dealCard(), dealCard()];
+            gameOver = false;
+
+            displayHands();
+            document.getElementById('result').textContent = '';
+        }
+
+        // Função para criar um baralho
+        function createDeck() {
+            const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+            const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+            let deck = [];
+
+            for (let suit of suits) {
+                for (let rank of ranks) {
+                    deck.push({ suit, rank });
+                }
+            }
+
+            return shuffleDeck(deck);
+        }
+
+        // Função para embaralhar o baralho
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            return deck;
+        }
+
+        // Função para distribuir uma carta do baralho
+        function dealCard() {
+            return deck.pop();
+        }
+
+        // Função para calcular a pontuação de uma mão
+        function calculateScore(hand) {
+            let score = 0;
+            let hasAce = false;
+
+            for (let card of hand) {
+                if (card.rank === 'A') {
+                    hasAce = true;
+                }
+                score += getCardValue(card.rank);
+            }
+
+            if (hasAce && score + 10 <= 21) {
+                score += 10; // Conta o Ás como 11 se não estourar o limite
+            }
+
+            return score;
+        }
+
+        // Função para obter o valor de uma carta
+        function getCardValue(rank) {
+            if (rank === 'J' || rank === 'Q' || rank === 'K') {
+                return 10;
+            } else if (rank === 'A') {
+                return 1; // O valor 1 será ajustado para 11, se possível, em calculateScore()
+            } else {
+                return parseInt(rank);
+            }
+        }
+
+        // Função para exibir as mãos do jogador e do computador
+        function displayHands() {
+            document.getElementById('player-hand').textContent = `Sua mão: ${handToString(playerHand)} (${calculateScore(playerHand)})`;
+            document.getElementById('dealer-hand').textContent = `Mão do computador: ${handToString(dealerHand)}`;
+        }
+
+        // Função para converter a mão em uma string para exibição
+        function handToString(hand) {
+            return hand.map(card => `${card.rank} of ${card.suit}`).join(', ');
+        }
+
+        // Função para lidar com a ação de "Comprar Carta"
+        function hit() {
+            if (!gameOver) {
+                playerHand.push(dealCard());
+                displayHands();
+
+                if (calculateScore(playerHand) > 21) {
+                    endGame('Você estourou! Computador vence.');
+                }
+            }
+        }
+
+        // Função para lidar com a ação de "Parar"
+        function stand() {
+            while (calculateScore(dealerHand) < 17) {
+                dealerHand.push(dealCard());
+            }
+
+            displayHands();
+
+            if (calculateScore(dealerHand) > 21) {
+                endGame('Computador estourou! Você vence.');
+            } else if (calculateScore(playerHand) > calculateScore(dealerHand)) {
+                endGame('Você vence!');
+            } else if (calculateScore(playerHand) < calculateScore(dealerHand)) {
+                endGame('Computador vence.');
+            } else {
+                endGame('Empate!');
+            }
+        }
+
+        // Função para encerrar o jogo
+        function endGame(message) {
+            gameOver = true;
+            document.getElementById('result').textContent = message;
+        }
+
+    </script>
+</body>
+</html>
